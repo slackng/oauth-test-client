@@ -11,7 +11,7 @@ function App() {
   const [clientId, setClientId] = useState(DEFAULT_CLIENT_ID);
   const [clientSecret, setClientSecret] = useState(DEFAULT_CLIENT_SECRET);
   const [providers, setProviders] = useState([]);
-  const [clientConfig, setClientConfig] = useState(null);
+  const [providerInfo, setProviderInfo] = useState(null);
   const [token, setToken] = useState(null);
   const [authUrl, setAuthUrl] = useState(null);
   const [tokenKey, setTokenKey] = useState(DEFAULT_TOKEN_KEY);
@@ -61,17 +61,22 @@ function App() {
       })
   }
 
-  function handleUpdateConfig(e) {
+  function handleUpdateProvider(e) {
     e.preventDefault();
-    const url = `${OAUTH_BROKER_URL}/providers/${activeProvider}/config`;
+    var data = JSON.parse(providerInfo);
+    var name = data["id"]["name"];
+    data["name"] = name;
+    delete data["id"];
+    const url = `${OAUTH_BROKER_URL}/providers`;
+    console.log(data);
     const requestOptions = {
-      method: 'PATCH',
+      method: 'PUT',
       headers: {
         'Access-Control-Allow-Origin': `http://localhost:${process.env.port}`,
         'Authorization': 'Bearer ' + token,
         'Content-Type': 'application/json'
       },
-      body: clientConfig
+      body: JSON.stringify(data)
     }
     fetch(url, requestOptions)
       .then(response => response.json())
@@ -93,20 +98,21 @@ function App() {
       .then(response => response.json())
       .then(data => {
         data = data.map(e => {
-          e.config = JSON.stringify(e["config"], null, 4);
+          delete e["tokens"];
+          delete e["dateCreated"];
+          delete e["dateUpdated"];
           return e;
         });
         setProviders(data);
-        setActiveProviderIndex(0);
         setActiveProvider(data[0]["id"]["name"]);
-        setClientConfig(JSON.stringify(data[0]["config"], null, 4))})
+        setActiveProviderIndex(0);
+      })
       .catch(e => alert("Failed to get providers: " + e))
   }
 
   function updateActiveProvider(index, name) {
     setActiveProvider(name);
     setActiveProviderIndex(index);
-    setClientConfig(providers[index]["config"]);
   }
   
   function handleInit(e) {
@@ -172,14 +178,14 @@ function App() {
         <p className="App-text">
             {token ? `Authorization valid until ${parseExpiry(token)}` : "Please authorize first"}
         </p>
-        <form className="App-text" onSubmit={e => handleUpdateConfig(e)}>
+        <form className="App-text" onSubmit={e => handleUpdateProvider(e)}>
           <select name="providers" onChange={e => {
               updateActiveProvider(e.target.value, providers[e.target.value]["id"]["name"]);
             }}>
             { providers.map((e, index) => <option value={index}>{e["id"]["name"]}</option>)}
           </select>
           <br></br>
-          <textarea defaultValue={providers[activeProviderIndex] && providers[activeProviderIndex]["config"]} rows="10" cols="100" onChange={e => setClientConfig(e.target.value)} />
+          <textarea defaultValue={JSON.stringify(providers[activeProviderIndex], null, 4)} rows="10" cols="100" onChange={e => setProviderInfo(e.target.value)} />
           <br></br>
           <input disabled={token === null} type="submit" value="Update config" />
         </form>

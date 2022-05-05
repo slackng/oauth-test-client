@@ -20,22 +20,23 @@ Basic: <base64encoded(ffffffff-ffff-ffff-ffff-ffffffffffff:TEST)>
 
 ### Creating a provider
 
-With the token returned above as an `Authorization: Bearer <token>` header, make a `POST` request to the following Broker endpoint: `http://{{host}}:{{port}}/providers` with the following body
+With the token returned above as an `Authorization: Bearer <token>` header, make a `PUT` request to the following Broker endpoint: `http://{{host}}:{{port}}/providers` with the following body
 
 ```json
 {
     "name": "provider-name",
+    "authUri": "https://example.com/o/oauth2/v2/auth",
+    "tokenUri": "https://example.com/token",
+    "redirectUri": "http://localhost:3000/oauth/callback",
+    "clientId": "abc",
+    "clientSecret": "123",
     "config": {
-        "authUri": "https://example.com/o/oauth2/v2/auth",
-        "tokenUri": "https://example.com/token",
-        "redirectUri": "http://localhost:3000/oauth/callback",
-        "clientId": "abc",
-        "clientSecret": "123"
+        "moreCustomQueryParams": "ok"
     }
 }
 ```
 
-You would want to fill in the config details of an actual OAuth Provider -- otherwise the Client cannot redirect. A good starting point is https://www.oauth.com/playground/authorization-code.html.
+The config object is a single-level string-only JSON object that will be appended to the authorization URL as query params. In the example above, `&moreCustomQueryParams=ok` will be appended. It can be left blank in the payload if not needed.
 
 ## Using the Client
 
@@ -47,11 +48,7 @@ You would want to fill in the config details of an actual OAuth Provider -- othe
 
 ```json
 {
-    "authUri": "https://example.com/o/oauth2/v2/auth",
-    "tokenUri": "https://example.com/token",
-    "redirectUri": "http://localhost:3000/oauth/callback",
-    "clientId": "abc",
-    "clientSecret": "123"
+    "moreCustomQueryParams": "ok"
 }
 ```
 4. Click <button>Update config</button> to store the updated config with the Provider.
