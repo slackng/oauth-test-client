@@ -8,6 +8,7 @@ function App() {
   const DEFAULT_CLIENT_SECRET = process.env.REACT_APP_DEFAULT_CLIENT_SECRET;
   const OAUTH_BROKER_URL = process.env.REACT_APP_OAUTH_BROKER_URL;
   const DEFAULT_TOKEN_KEY= process.env.REACT_APP_DEFAULT_TOKEN_KEY;
+  const [brokerUrl, setBrokerUrl] = useState(OAUTH_BROKER_URL);
   const [clientId, setClientId] = useState(DEFAULT_CLIENT_ID);
   const [clientSecret, setClientSecret] = useState(DEFAULT_CLIENT_SECRET);
   const [providers, setProviders] = useState([]);
@@ -21,7 +22,7 @@ function App() {
   const [query, setQuery] = useState("");
 
   function loadToken() {
-    const url = `${OAUTH_BROKER_URL}/tokens/${activeProvider}/${tokenKey}`;
+    const url = `${brokerUrl}/tokens/${activeProvider}/${tokenKey}`;
     const requestOptions = {
       method: 'GET',
       headers: {
@@ -40,7 +41,7 @@ function App() {
 
   function handleLogin(e) {
     e.preventDefault();
-    const url = `${OAUTH_BROKER_URL}/auth/service`;
+    const url = `${brokerUrl}/auth/service`;
     const requestOptions = {
       method: 'POST',
       headers: {
@@ -67,7 +68,7 @@ function App() {
     var name = data["id"]["name"];
     data["name"] = name;
     delete data["id"];
-    const url = `${OAUTH_BROKER_URL}/providers`;
+    const url = `${brokerUrl}/providers`;
     console.log(data);
     const requestOptions = {
       method: 'PUT',
@@ -86,7 +87,7 @@ function App() {
   }
 
   function getProviders(token) {
-    const url = `${OAUTH_BROKER_URL}/providers`;
+    const url = `${brokerUrl}/providers`;
     const requestOptions = {
       method: 'GET',
       headers: {
@@ -117,7 +118,7 @@ function App() {
   
   function handleInit(e) {
     e.preventDefault();
-    var url = `${OAUTH_BROKER_URL}/oauth/init?` + new URLSearchParams({
+    var url = `${brokerUrl}/oauth/init?` + new URLSearchParams({
       provider: activeProvider,
       tokenKey: tokenKey,
       state: 'passthrough',
@@ -171,7 +172,8 @@ function App() {
           OAuth Broker Test Client
         </p>
         <form className="App-text" onSubmit={e => handleLogin(e)}>
-          <input type="text" name="clientId" defaultValue={DEFAULT_CLIENT_ID} placeholder="Username" onChange={e => setClientId(e.target.value)}/>
+          <input type="text" name="brokerUrl" defaultValue={OAUTH_BROKER_URL} placeholder="Broker" size="40" onChange={e => setBrokerUrl(e.target.value)} />
+          <input type="text" name="clientId" defaultValue={DEFAULT_CLIENT_ID} placeholder="Username" size="30" onChange={e => setClientId(e.target.value)}/>
           <input type="password" name="clientSecret" defaultValue={DEFAULT_CLIENT_SECRET} placeholder="Password" onChange={e => setClientSecret(e.target.value)} />
           <input type="submit" value="Authorize with broker"/>
         </form>
