@@ -1,7 +1,7 @@
 import logo from './logo.png';
 import './App.css';
 import {encode as base64_encode} from 'base-64';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 function App() {
   const DEFAULT_CLIENT_ID = process.env.REACT_APP_DEFAULT_CLIENT_ID;
@@ -20,6 +20,47 @@ function App() {
   const [activeProvider, setActiveProvider] = useState("");
   const [activeProviderIndex, setActiveProviderIndex] = useState(0);
   const [query, setQuery] = useState("");
+  const [subjectToken, setSubjectToken] = useState("");
+
+  function refreshToken() {
+    const url = `${brokerUrl}/oauth/refresh?` + new URLSearchParams({
+      provider: activeProvider,
+      tokenKey: tokenKey,
+    });
+    const requestOptions = {
+      method: 'GET',
+      headers: {
+        'Access-Control-Allow-Origin': `http://localhost:${process.env.port}`,
+        'Authorization': 'Bearer ' +  token
+      }
+    }
+    fetch(url, requestOptions)
+      .then(response => response.json())
+      .then(data => {
+        setTokenValue(data["tokenValue"]);
+      })
+      .catch(e => alert("Failed to get token info: " + e))
+  }
+
+  function refreshTokenSubject() {
+    const url = `${brokerUrl}/oauth/subject/refresh?` + new URLSearchParams({
+      provider: activeProvider,
+      subject: tokenKey,
+    });
+    const requestOptions = {
+      method: 'GET',
+      headers: {
+        'Access-Control-Allow-Origin': `http://localhost:${process.env.port}`,
+        'Authorization': 'Bearer ' +  token
+      }
+    }
+    fetch(url, requestOptions)
+      .then(response => response.json())
+      .then(data => {
+        setSubjectToken(data["subjectToken"]);
+      })
+      .catch(e => alert("Failed to get token info: " + e))
+  }
 
   function loadToken() {
     const url = `${brokerUrl}/tokens/${activeProvider}/${tokenKey}`;
@@ -35,6 +76,27 @@ function App() {
       .then(response => response.json())
       .then(data => {
         setTokenValue(data["tokenValue"]);
+      })
+      .catch(e => alert("Failed to get token info: " + e))
+  }
+
+  function loadTokenSubject() {
+    const url = `${brokerUrl}/oauth/subject/token?` + new URLSearchParams({
+      provider: activeProvider,
+      tokenKey: tokenKey,
+      state: 'passthrough',
+    });
+    const requestOptions = {
+      method: 'GET',
+      headers: {
+        'Access-Control-Allow-Origin': `http://localhost:${process.env.port}`,
+        'Authorization': 'Bearer ' +  subjectToken
+      }
+    }
+    fetch(url, requestOptions)
+      .then(response => response.json())
+      .then(data => {
+        setTokenValue(data["accessToken"]);
       })
       .catch(e => alert("Failed to get token info"))
   }
@@ -114,6 +176,35 @@ function App() {
   function updateActiveProvider(index, name) {
     setActiveProvider(name);
     setActiveProviderIndex(index);
+  }
+
+  function handleInitSubject(e) {
+    e.preventDefault();
+    var url = `${brokerUrl}/oauth/subject/init?` + new URLSearchParams({
+      provider: activeProvider,
+      subject: tokenKey,
+      state: 'passthrough',
+    });
+    if (query !== "") {
+     url += "&" + query
+    }
+    const requestOptions = {
+      method: 'GET',
+      headers: {
+        'Access-Control-Allow-Origin': `http://localhost:${process.env.port}`,
+        'Authorization': 'Bearer ' +  token
+      }
+    }
+    fetch(url, requestOptions)
+      .then(response => response.json())
+      .then(data => {
+        if (data["redirect"]) {
+          setAuthUrl(data["redirect"]);
+        } else if (data["subjectToken"]) {
+          setSubjectToken(data["subjectToken"])
+        }
+      })
+      .catch(e => alert(e));
   }
   
   function handleInit(e) {
@@ -195,7 +286,12 @@ function App() {
         <form className="App-text" onSubmit={e => handleInit(e)}>
           <input type="text" name="tokenKey" defaultValue={DEFAULT_TOKEN_KEY} placeholder="Token Key" onChange={e => setTokenKey(e.target.value)}/>
           <input type="text" name="query" size={50} placeholder="Query Params" onChange={e => setQuery(e.target.value)}/>
-          <input disabled={token === null || tokenKey === null || tokenKey === ""} type="submit" value="Get OAuth URL from broker" />
+          <input disabled={token === null || tokenKey === null || tokenKey === ""} type="submit" value="Get OAuth URL as client" />
+        </form>
+        <form className="App-text" onSubmit={e => handleInitSubject(e)}>
+          <input type="text" name="subject" defaultValue={DEFAULT_TOKEN_KEY} placeholder="Subject" onChange={e => setTokenKey(e.target.value)}/>
+          <input type="text" name="query" size={50} placeholder="Query Params" onChange={e => setQuery(e.target.value)}/>
+          <input disabled={token === null || tokenKey === null || tokenKey === ""} type="submit" value="Init OAuth flow as client of service " />
         </form>
         <p className="App-text">
           {authUrl ? "Ready to redirect" : ""}
@@ -206,14 +302,41 @@ function App() {
         >
           Redirect to provider
         </button>
+        <p className='App-text'>
+          Subject token:<br></br>
+          <textarea
+            rows="10"
+            cols="100"
+            value={subjectToken}
+            onChange={e => setSubjectToken(e.target.value)}
+          /><br />
+          <button
+            onClick={loadTokenSubject}
+          >
+          Exchange subject token for token
+          </button>
+        </p>
         <p className="App-text">
           Tokenstore value:<br></br>
           <textarea disabled rows="10" cols="100" value={tokenValue} /><br />
+          <form className="App-text">
+            <input type="text" name="subject" defaultValue={DEFAULT_TOKEN_KEY} placeholder="Token Key/Subject" onChange={e => setTokenKey(e.target.value)}/>
+          </form>
           <button
-            onClick={loadToken}
-          >
-          Reload
-          </button>
+              onClick={loadToken}
+            >
+            Reload as client
+            </button>
+            <button
+              onClick={refreshToken}
+            >
+            Refresh as client
+            </button>
+            <button
+              onClick={refreshTokenSubject}
+            >
+            Refresh as service
+            </button>
         </p>
         <br></br>
         <button
