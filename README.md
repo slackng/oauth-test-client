@@ -24,15 +24,15 @@ With the token returned above as an `Authorization: Bearer <token>` header, make
 
 ```json
 {
-    "name": "provider-name",
-    "authUri": "https://example.com/o/oauth2/v2/auth",
-    "tokenUri": "https://example.com/token",
-    "redirectUri": "http://localhost:3000/oauth/callback",
-    "clientId": "abc",
-    "clientSecret": "123",
-    "config": {
-        "moreCustomQueryParams": "ok"
-    }
+  "name": "provider-name",
+  "authUri": "https://example.com/o/oauth2/v2/auth",
+  "tokenUri": "https://example.com/token",
+  "redirectUri": "http://localhost:3000/oauth/callback",
+  "clientId": "abc",
+  "clientSecret": "123",
+  "config": {
+    "moreCustomQueryParams": "ok"
+  }
 }
 ```
 
@@ -48,9 +48,10 @@ The config object is a single-level string-only JSON object that will be appende
 
 ```json
 {
-    "moreCustomQueryParams": "ok"
+  "moreCustomQueryParams": "ok"
 }
 ```
+
 4. Click <button>Update config</button> to store the updated config with the Provider.
 5. Enter a token key. If not, the default token key will be used. A token key the key with which your OAuth token is stored with the Broker. It is unique to the Client ID and Provider name.
 6. Enter any additional query params needed for the authorization part of the OAuth transaction in the form `abc=123&xyz=420`. This is typically documented for you on the Provider's documentation. For example, [this](https://developers.google.com/identity/protocols/oauth2/web-server#creatingclient) is Google's.
